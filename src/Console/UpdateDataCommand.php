@@ -25,7 +25,7 @@ class UpdateDataCommand  extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
 
-        echo "Update currency table";
+        echo "Update currency table".PHP_EOL;
             return Command::SUCCESS;
 
             return Command::FAILURE;
