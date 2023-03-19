@@ -15,10 +15,10 @@ class Locode
     #[ORM\Column(type: 'integer')]
     private $id;
 
-    #[ORM\Column(type: 'string', length: 2, nullable: false)]
+    #[ORM\Column(type: 'string', length: 1, nullable: false)]
     private $changeIndicator;
 
-    #[ORM\Column(type: 'string', length: 3, nullable: true)]
+    #[ORM\Column(type: 'string', length: 5, nullable: true)]
     private $locode;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
@@ -74,6 +74,24 @@ class Locode
         $this->iata = $iata;
         $this->coordinates = $coordinates;
         $this->remarks = $remarks;
+    }
+
+
+    public function toArray(): array
+    {
+        return [
+            'changeIndicator' => $this->changeIndicator,
+            'locode' => $this->locode,
+            'name' => $this->name,
+            'nameWoDiacritics' => $this->nameWoDiacritics,
+            'subdivision' => $this->subdivision,
+            'function' => $this->function,
+            'status' => $this->status,
+            'date' => $this->date,
+            'iata' => $this->iata,
+            'coordinates' => $this->coordinates,
+            'remarks' => $this->remarks,
+        ];
     }
 
 

@@ -13,7 +13,6 @@ class UpdateDataService
         'changeIndicator',
         'locode',
         'name',
-        'localisedName',
         'nameWoDiacritics',
         'function',
         'subdivision',
@@ -71,15 +70,15 @@ class UpdateDataService
 
     public function parseCsvFile(string $pathToFile): void
     {
-
-//        $encode =  function ($data){return iconv('windows-1250', "UTF-8", $data);};
-        //        $data = array_map($encode, $data1);
+        $encode = function ($data) {
+            return iconv('windows-1250', "UTF-8", $data);
+        };
 
 
         $csv = $this->getArr($pathToFile);
         foreach ($csv as $value) {
-            $data = array_combine(self::COLUMN_NAMES, $value);
-
+            $data1 = array_combine(self::COLUMN_NAMES, $value);
+            $data = array_map($encode, $data1);
 
             $locode = new Locode(
                 $data['changeIndicator'],
@@ -104,7 +103,11 @@ class UpdateDataService
      */
     public function getArr(string $pathToFile): array
     {
-        return array_map('str_getcsv', file($pathToFile));
+        $arr = array_map('str_getcsv', file($pathToFile));
+        foreach ($arr as $item => $value) {
+            $arr[$item] = array_merge([$value[0], $value[1] . $value[2]], array_slice($value, 3));
+        }
+        return $arr;
     }
 
 
