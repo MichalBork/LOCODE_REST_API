@@ -52,7 +52,6 @@ class UpdateDataCommand extends Command
     {
         $this
             ->setDescription('Update currency table');
-
     }
 
 
@@ -81,11 +80,15 @@ class UpdateDataCommand extends Command
                 self::FILE_PATH . self::FILE_NAME_UNZIP
             );
 
+            $files = glob(self::FILE_PATH . self::FILE_NAME_UNZIP . '/*');
+            $codeList = 'CodeList';
 
-            $this->updateDataService->parseCsvFile(self::FILE_PATH . self::FILE_NAME_UNZIP);
-            die();
-
-
+            foreach ($files as $file) {
+                $filename = basename($file);
+                if (str_contains($filename, $codeList)) {
+                    $this->updateDataService->parseCsvFile(self::FILE_PATH . self::FILE_NAME_UNZIP . '/' . $filename);
+                }
+            }
             $this->updateDataService->createFileWithDate($dateOfLastUpdate[1]);
         } else {
             $output->writeln('Data is up to date');

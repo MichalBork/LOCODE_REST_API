@@ -13,8 +13,8 @@ class UpdateDataService
         'changeIndicator',
         'locode',
         'name',
+        'localisedName',
         'nameWoDiacritics',
-        'subdivision',
         'function',
         'subdivision',
         'status',
@@ -69,42 +69,43 @@ class UpdateDataService
     }
 
 
-    public function parseCsvFile(string $pathToFile)
+    public function parseCsvFile(string $pathToFile): void
     {
-        $data = [];
-$x = 0;
-        $csv = array_map('str_getcsv', file($pathToFile . '/2022-2 UNLOCODE CodeListPart1.csv'));
-        $lastKey = array_key_last($csv);
-        foreach ($csv as $key => $value) {
-            $data1 = array_combine(self::COLUMN_NAMES, $value);
-            $data = array_map('addslashes', $data1);
-            if ($data1['nameWoDiacritics'] !== $data1['nameWoDiacritics']){
-                dd($data1,$data);
-            }
-            try {
-                $locode = new Locode(
-                    $data['changeIndicator'],
-                    $data['locode'],
-                    $data['name'],
-                    $data['nameWoDiacritics'],
-                    $data['subdivision'],
-                    $data['function'],
-                    $data['status'],
-                    $data['date'],
-                    $data['iata'],
-                    $data['coordinates'],
-                    $data['remarks']
-                );
-                $this->locodeRepository->save($locode,true);
-                echo $x++;
-            }catch (\Exception $e) {
-                dd($e->getMessage(), $data1, $data);
-            }
+
+//        $encode =  function ($data){return iconv('windows-1250', "UTF-8", $data);};
+        //        $data = array_map($encode, $data1);
 
 
+        $csv = $this->getArr($pathToFile);
+        foreach ($csv as $value) {
+            $data = array_combine(self::COLUMN_NAMES, $value);
+
+
+            $locode = new Locode(
+                $data['changeIndicator'],
+                $data['locode'],
+                $data['name'],
+                $data['nameWoDiacritics'],
+                $data['subdivision'],
+                $data['function'],
+                $data['status'],
+                $data['date'],
+                $data['iata'],
+                $data['coordinates'],
+                $data['remarks']
+            );
+            $this->locodeRepository->save($locode, true);
         }
     }
 
+    /**
+     * @param string $pathToFile
+     * @return array
+     */
+    public function getArr(string $pathToFile): array
+    {
+        return array_map('str_getcsv', file($pathToFile));
+    }
 
 
 }

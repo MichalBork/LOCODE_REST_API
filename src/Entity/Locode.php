@@ -5,7 +5,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'locode',options: ['collate' => 'utf8mb4_unicode_ci', 'charset' => 'utf8mb4'])]
+#[ORM\Table(name: 'locode', options: ['collate' => 'utf8mb4_unicode_ci', 'charset' => 'utf8mb4'])]
 class Locode
 {
 
@@ -30,7 +30,7 @@ class Locode
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private $subdivision;
 
-    #[ORM\Column(type: 'string',name: 'code_function', length: 100, nullable: true)]
+    #[ORM\Column(type: 'string', name: 'code_function', length: 100, nullable: true)]
     private $function;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
@@ -54,8 +54,9 @@ class Locode
         string $locode,
         string $name,
         ?string $nameWoDiacritics,
-        string $subdivision,
         string $function,
+        string $subdivision,
+
         string $status,
         string $date,
         string $iata,
@@ -74,8 +75,6 @@ class Locode
         $this->coordinates = $coordinates;
         $this->remarks = $remarks;
     }
-
-
 
 
 }
