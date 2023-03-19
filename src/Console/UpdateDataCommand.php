@@ -26,7 +26,7 @@ class UpdateDataCommand extends Command
     const REGEX_FILE = '/https:\/\/service.unece.org\/trade\/locode\/(\w+)csv.zip/';
     const REGEX_DATE = '/<span class="field-content">(.+?)<\/span>/';
     const FILE_NAME = 'data.zip';
-    const FILE_NAME_UNZIP = 'data';
+    const FILE_NAME_UNZIP = '/data';
     const FILE_PATH = __DIR__ . '/../../tmp';
 
     const METHOD_GET = 'GET';
@@ -80,6 +80,10 @@ class UpdateDataCommand extends Command
                 self::FILE_PATH . self::FILE_NAME,
                 self::FILE_PATH . self::FILE_NAME_UNZIP
             );
+
+
+            $this->updateDataService->parseCsvFile(self::FILE_PATH . self::FILE_NAME_UNZIP);
+            die();
 
 
             $this->updateDataService->createFileWithDate($dateOfLastUpdate[1]);
