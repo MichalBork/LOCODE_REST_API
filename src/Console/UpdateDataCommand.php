@@ -4,6 +4,7 @@ namespace App\Console;
 
 use App\Command\ParseHtmlCommand;
 use App\Command\SendRequestCommand;
+use App\Repository\LocodeRepository;
 use App\Service\UpdateDataService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -39,13 +40,15 @@ class UpdateDataCommand extends Command
         HttpClientInterface $client,
         MessageBusInterface $commandBus,
         MessageBusInterface $messageBus,
-        UpdateDataService $updateDataService
+        UpdateDataService $updateDataService,
+        LocodeRepository $locodeRepository,
     ) {
         parent::__construct();
         $this->client = $client;
         $this->commandBus = $commandBus;
         $this->messageBus = $messageBus;
         $this->updateDataService = $updateDataService;
+        $this->locodeRepository = $locodeRepository;
     }
 
     protected function configure(): void
@@ -86,7 +89,7 @@ class UpdateDataCommand extends Command
             foreach ($files as $file) {
                 $filename = basename($file);
                 if (str_contains($filename, $codeList)) {
-                    $this->updateDataService->parseCsvFile(self::FILE_PATH . self::FILE_NAME_UNZIP . '/' . $filename);
+                    $this->updateDataService->parseCsvFile(self::FILE_PATH . self::FILE_NAME_UNZIP . '/' . $filename, !empty( $this->locodeRepository->findBy(['name'=> '.ANDORA'])));
                 }
             }
             $this->updateDataService->createFileWithDate($dateOfLastUpdate[1]);

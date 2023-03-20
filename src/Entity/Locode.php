@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\DTO\CodeFunctionDTO;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
@@ -30,8 +31,10 @@ class Locode
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private $subdivision;
 
-    #[ORM\Column(type: 'string', name: 'code_function', length: 100, nullable: true)]
-    private $function;
+    #[ORM\OneToOne(targetEntity: CodeFunction::class, inversedBy: 'locode', cascade: ['persist', 'remove'])]
+    #[ORM\JoinColumn(nullable: true)]
+    private CodeFunction $codeFunction;
+
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private $status;
@@ -55,7 +58,6 @@ class Locode
         string $name,
         ?string $nameWoDiacritics,
         string $subdivision,
-        string $function,
         string $status,
         string $date,
         string $iata,
@@ -67,7 +69,6 @@ class Locode
         $this->name = $name;
         $this->nameWoDiacritics = $nameWoDiacritics;
         $this->subdivision = $subdivision;
-        $this->function = $function;
         $this->status = $status;
         $this->date = $date;
         $this->iata = $iata;
@@ -91,6 +92,11 @@ class Locode
             'coordinates' => $this->coordinates,
             'remarks' => $this->remarks,
         ];
+    }
+
+    public function addCodeFunction(CodeFunctionDTO $codeFunction): void
+    {
+        $this->codeFunction = CodeFunction::createFromCodeFunctionDTO($codeFunction) ;
     }
 
     /**

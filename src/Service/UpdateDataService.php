@@ -2,6 +2,9 @@
 
 namespace App\Service;
 
+use App\DTO\CodeFunctionDTO;
+use App\Entity\CodeFunction;
+use App\Repository\CodeFunctionRepository;
 use App\Repository\LocodeRepository;
 use App\Entity\Locode;
 
@@ -23,11 +26,15 @@ class UpdateDataService
         'remarks'
     ];
     private LocodeRepository $locodeRepository;
+    private CodeFunctionRepository $codeFunctionRepository;
+    private $file;
+    private int $fileEnd = 0;
 
 
-    public function __construct(LocodeRepository $locodeRepository)
+    public function __construct(LocodeRepository $locodeRepository, CodeFunctionRepository $codeFunctionRepository)
     {
         $this->locodeRepository = $locodeRepository;
+        $this->codeFunctionRepository = $codeFunctionRepository;
     }
 
     public function checkIfUpdateIsNeeded(string $updateDate): bool
@@ -68,34 +75,64 @@ class UpdateDataService
     }
 
 
-    public function parseCsvFile(string $pathToFile): void
+
+    public function parseCsvFile(string $pathToFile, bool $update): void
     {
-        $csv = $this->getArr($pathToFile);
-        $databaseData = $this->locodeRepository->findOneBy(['name' => '.ANDORRA']);
-        if (!empty($databaseData)) {
-            $this->updateLocode($csv);
-        } else {
-            foreach ($csv as $value) {
-                $this->fillDatabaseWithLocode($value);
+        $this->setFile(fopen($pathToFile, 'r'));
+        do {
+            $csv = $this->getNextPartOfFileAsArray(50);
+
+
+            if ($update) {
+                $this->updateLocode($csv);
+            } else {
+                foreach ($csv as $value) {
+                    $this->fillDatabaseWithLocode($value);
+                }
             }
-        }
+        } while (!feof($this->file));
     }
 
     /**
-     * @param string $pathToFile
      * @return array
      */
-    public function getArr(string $pathToFile): array
+    public function getNextPartOfFileAsArray(int $partSize): array
     {
-        $arr = array_map('str_getcsv', file($pathToFile));
-        foreach ($arr as $item => $value) {
-            if (!isset($value[1])) {
-                unset($arr[$item]);
-                continue;
+        $arr = [];
+        while (($line = fgets($this->file)) !== false) {
+            $partSize--;
+            $arr[] = str_getcsv($line);
+            if ($partSize === 0) {
+                break;
             }
-            $arr[$item] = array_merge([$value[0], $value[1] . $value[2]], array_slice($value, 3));
         }
+
+        try {
+            foreach ($arr as $key => $value) {
+                if (isset($value[2])) {
+                    $arr[$key] = array_merge([$value[0], $value[1] . $value[2]], array_slice($value, 3));
+                } else {
+                    unset($arr[$key]);
+                }
+            }
+        } catch (\Exception $e) {
+            dd($e->getMessage());
+
+            dd($value);
+        }
+
         return $arr;
+
+
+    }
+
+
+    private function setFile($file): void
+    {
+        if (!is_resource($file)) {
+            throw new \InvalidArgumentException('File is not resource');
+        }
+        $this->file = $file;
     }
 
     private function updateLocode(array $csv): void
@@ -104,14 +141,12 @@ class UpdateDataService
             $data = $this->createArrayWithKeyAndCorrectEncoding($value);
             if (!empty($data['changeIndicator'])) {
                 $locode = $this->locodeRepository->findOneBy(['locode' => $data['locode']]);
-
                 if ($locode) {
                     foreach ($data as $key => $item) {
                         $locode->{'set' . ucfirst($key)}($item);
 
-                        $this->locodeRepository->save($locode, true);
+                        $this->locodeRepository->save($locode,true );
                     }
-
                 }
             }
         }
@@ -160,13 +195,43 @@ class UpdateDataService
             $data['name'],
             $data['nameWoDiacritics'],
             $data['subdivision'],
-            $data['function'],
             $data['status'],
             $data['date'],
             $data['iata'],
             $data['coordinates'],
             $data['remarks']
         );
+
+        if (!empty($data['function'])) {
+            $locode->addCodeFunction($this->parseFunctionColumn($data['function'], $locode));
+        }
+
+
         $this->locodeRepository->save($locode, true);
     }
+
+
+    public function parseFunctionColumn(string $function, Locode $locode): CodeFunctionDTO
+    {
+        $function = str_split($function);
+        $stringToBool = function ($data) {
+            return $data !== '-';
+        };
+        $codeFunctionDTO = CodeFunctionDTO::createFromArray(array_map($stringToBool, $function), $locode);
+
+        if ($function[array_key_first($function)] === '0') {
+            $codeFunctionDTO = CodeFunctionDTO::createCodeFunctionWithUnknown($locode);
+        }
+
+
+        return $codeFunctionDTO;
+    }
+
+    public function __destruct()
+    {
+        if (!is_resource($this->file)) {
+            fclose($this->file);
+        }
+    }
+
 }
