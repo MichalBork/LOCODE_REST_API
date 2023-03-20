@@ -90,6 +90,8 @@ class UpdateDataCommand extends Command
                 }
             }
             $this->updateDataService->createFileWithDate($dateOfLastUpdate[1]);
+            return Command::SUCCESS;
+
         } else {
             $output->writeln('Data is up to date');
             return Command::SUCCESS;

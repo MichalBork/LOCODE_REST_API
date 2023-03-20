@@ -54,9 +54,8 @@ class Locode
         string $locode,
         string $name,
         ?string $nameWoDiacritics,
-        string $function,
         string $subdivision,
-
+        string $function,
         string $status,
         string $date,
         string $iata,
@@ -93,6 +92,97 @@ class Locode
             'remarks' => $this->remarks,
         ];
     }
+
+    /**
+     * @param string|null $changeIndicator
+     */
+    public function setChangeIndicator(?string $changeIndicator): void
+    {
+        $this->changeIndicator = $changeIndicator;
+    }
+
+    /**
+     * @param string $locode
+     */
+    public function setLocode(string $locode): void
+    {
+        $this->locode = $locode;
+    }
+
+    /**
+     * @param string $name
+     */
+    public function setName(string $name): void
+    {
+        $this->name = $name;
+    }
+
+    /**
+     * @param string|null $nameWoDiacritics
+     */
+    public function setNameWoDiacritics(?string $nameWoDiacritics): void
+    {
+        $this->nameWoDiacritics = $nameWoDiacritics;
+    }
+
+    /**
+     * @param string $subdivision
+     */
+    public function setSubdivision(string $subdivision): void
+    {
+        $this->subdivision = $subdivision;
+    }
+
+    /**
+     * @param string $function
+     */
+    public function setFunction(string $function): void
+    {
+        $this->function = $function;
+    }
+
+    /**
+     * @param string $status
+     */
+    public function setStatus(string $status): void
+    {
+        $this->status = $status;
+    }
+
+    /**
+     * @param string $date
+     */
+    public function setDate(string $date): void
+    {
+        $this->date = $date;
+    }
+
+    /**
+     * @param string $iata
+     */
+    public function setIata(string $iata): void
+    {
+        $this->iata = $iata;
+    }
+
+    /**
+     * @param string $coordinates
+     */
+    public function setCoordinates(string $coordinates): void
+    {
+        $this->coordinates = $coordinates;
+    }
+
+    /**
+     * @param string $remarks
+     */
+    public function setRemarks(string $remarks): void
+    {
+        $this->remarks = $remarks;
+    }
+
+
+
 
 
 }
