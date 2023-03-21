@@ -5,6 +5,8 @@ namespace App\Console;
 use App\Command\ParseHtmlCommand;
 use App\Command\SendRequestCommand;
 use App\Repository\LocodeRepository;
+use App\Service\DownloadFilesService;
+use App\Service\ParseFileDataService;
 use App\Service\UpdateDataService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -35,6 +37,9 @@ class UpdateDataCommand extends Command
     private HttpClientInterface $client;
     private MessageBusInterface $commandBus;
     private UpdateDataService $updateDataService;
+    private DownloadFilesService $downloadFilesService;
+    private LocodeRepository $locodeRepository;
+    private ParseFileDataService $parseFileDataService;
 
     public function __construct(
         HttpClientInterface $client,
@@ -42,6 +47,8 @@ class UpdateDataCommand extends Command
         MessageBusInterface $messageBus,
         UpdateDataService $updateDataService,
         LocodeRepository $locodeRepository,
+        DownloadFilesService $downloadFilesService,
+        ParseFileDataService $parseFileDataService
     ) {
         parent::__construct();
         $this->client = $client;
@@ -49,6 +56,8 @@ class UpdateDataCommand extends Command
         $this->messageBus = $messageBus;
         $this->updateDataService = $updateDataService;
         $this->locodeRepository = $locodeRepository;
+        $this->downloadFilesService = $downloadFilesService;
+        $this->parseFileDataService = $parseFileDataService;
     }
 
     protected function configure(): void
@@ -64,66 +73,49 @@ class UpdateDataCommand extends Command
             mkdir(self::FILE_PATH, 0777, true);
         }
 
-        $findUrlToDownloadFile = $this->handle(new SendRequestCommand(self::METHOD_GET, self::URL));
+        try {
+            $findUrlToDownloadFile = $this->handle(new SendRequestCommand(self::METHOD_GET, self::URL));
 
 
-        $dateOfLastUpdate = $this->handle(new ParseHtmlCommand($findUrlToDownloadFile->getContent(), self::REGEX_DATE));
-
-        if ($this->updateDataService->checkIfUpdateIsNeeded($dateOfLastUpdate[1])) {
-            $urlToDownloadFile = $this->handle(
-                new ParseHtmlCommand($findUrlToDownloadFile->getContent(), self::REGEX_FILE)
-            );
-            file_put_contents(
-                self::FILE_PATH . self::FILE_NAME,
-                $this->handle(new SendRequestCommand(self::METHOD_GET, $urlToDownloadFile[0]))->getContent()
+            $dateOfLastUpdate = $this->handle(
+                new ParseHtmlCommand($findUrlToDownloadFile->getContent(), self::REGEX_DATE)
             );
 
-            $this->updateDataService->unzipFile(
-                self::FILE_PATH . self::FILE_NAME,
-                self::FILE_PATH . self::FILE_NAME_UNZIP
-            );
+            if ($this->downloadFilesService->checkIfUpdateIsNeeded($dateOfLastUpdate[1])) {
+                $urlToDownloadFile = $this->handle(
+                    new ParseHtmlCommand($findUrlToDownloadFile->getContent(), self::REGEX_FILE)
+                );
+                file_put_contents(
+                    self::FILE_PATH . self::FILE_NAME,
+                    $this->handle(new SendRequestCommand(self::METHOD_GET, $urlToDownloadFile[0]))->getContent()
+                );
 
-            $files = glob(self::FILE_PATH . self::FILE_NAME_UNZIP . '/*');
-            $codeList = 'CodeList';
+                $this->downloadFilesService->unzipFile(
+                    self::FILE_PATH . self::FILE_NAME,
+                    self::FILE_PATH . self::FILE_NAME_UNZIP
+                );
 
-            foreach ($files as $file) {
-                $filename = basename($file);
-                if (str_contains($filename, $codeList)) {
-                    $this->updateDataService->parseCsvFile(self::FILE_PATH . self::FILE_NAME_UNZIP . '/' . $filename, !empty( $this->locodeRepository->findBy(['name'=> '.ANDORA'])));
+                $files = glob(self::FILE_PATH . self::FILE_NAME_UNZIP . '/*');
+                $codeList = 'CodeList';
+
+                foreach ($files as $file) {
+                    $filename = basename($file);
+                    if (str_contains($filename, $codeList)) {
+                        $this->parseFileDataService->parseCsvFile(
+                            self::FILE_PATH . self::FILE_NAME_UNZIP . '/' . $filename,
+                            !empty($this->locodeRepository->findBy(['name' => '.ANDORA']))
+                        );
+                    }
                 }
+                $this->downloadFilesService->createFileWithDate($dateOfLastUpdate[1]);
+                $output->writeln('Data updated');
+            } else {
+                $output->writeln('Data is up to date');
             }
-            $this->updateDataService->createFileWithDate($dateOfLastUpdate[1]);
             return Command::SUCCESS;
-
-        } else {
-            $output->writeln('Data is up to date');
-            return Command::SUCCESS;
+        } catch (\Exception $e) {
+            $output->writeln($e->getMessage());
+            return Command::FAILURE;
         }
-
-
-        die();
-
-
-        //add regex to get url
-
-
-//        file_put_contents('data.zip', $file->getContent());
-//
-//        $zip = new ZipArchive();
-//
-//        $file = 'data.zip';
-//
-//        if ($zip->open($file) === true) {
-//            $zip->extractTo('plik');
-//        }
-//            // Zamknij plik ZIP
-//            $zip->close();
-//
-//        $csv = array_map('str_getcsv', file('plik/2022-2 UNLOCODE CodeListPart1.csv'));
-//        var_dump($csv);
-        die();
-        return Command::SUCCESS;
-
-        return Command::FAILURE;
     }
 }
