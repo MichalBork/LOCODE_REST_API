@@ -1,0 +1,1 @@
+0 0 * * * cd /var/www/symfony/LOCODE_REST_API && php bin/console app:update-data
