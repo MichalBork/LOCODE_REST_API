@@ -94,4 +94,20 @@ class CodeFunction
         );
     }
 
+
+    public function toArray(): array
+    {
+        return [
+            'unknown' => $this->unknown,
+            'defined' => $this->defined,
+            'railTerminal' => $this->railTerminal,
+            'roadTerminal' => $this->roadTerminal,
+            'airport' => $this->airport,
+            'postalExchangeOffice' => $this->postalExchangeOffice,
+            'icd' => $this->icd,
+            'fixTransportFacility' => $this->fixTransportFacility,
+            'borderCrossing' => $this->borderCrossing,
+        ];
+    }
+
 }

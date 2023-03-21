@@ -85,12 +85,13 @@ class Locode
             'name' => $this->name,
             'nameWoDiacritics' => $this->nameWoDiacritics,
             'subdivision' => $this->subdivision,
-            'function' => $this->function,
+
             'status' => $this->status,
             'date' => $this->date,
             'iata' => $this->iata,
             'coordinates' => $this->coordinates,
             'remarks' => $this->remarks,
+            'function' => $this->codeFunction->toArray(),
         ];
     }
 
